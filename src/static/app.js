@@ -528,8 +528,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
 
-    // Create difficulty badge if difficulty level exists
-    const difficultyBadge = details.difficulty_level ? `
+    // Create difficulty badge if difficulty level exists (with validation)
+    const validDifficultyLevels = ['Beginner', 'Intermediate', 'Advanced'];
+    const difficultyBadge = details.difficulty_level && validDifficultyLevels.includes(details.difficulty_level) ? `
       <p class="difficulty-badge difficulty-${details.difficulty_level.toLowerCase()}">
         <strong>Level:</strong> ${details.difficulty_level}
       </p>

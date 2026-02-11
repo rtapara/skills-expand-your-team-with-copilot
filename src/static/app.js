@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
 
+  // Constants
+  const SCHOOL_NAME = "Mergington High School";
+
   // Activity categories with corresponding colors
   const activityTypes = {
     sports: { label: "Sports", color: "#e8f5e9", textColor: "#2e7d32" },
@@ -304,6 +307,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return details.schedule;
   }
 
+  // Helper function to escape HTML attributes to prevent XSS
+  function escapeHtmlAttribute(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   // Function to determine activity type (this would ideally come from backend)
   function getActivityType(activityName, description) {
     const name = activityName.toLowerCase();
@@ -554,16 +564,16 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div class="share-buttons">
         <span class="share-label">Share:</span>
-        <button class="share-btn share-twitter" data-activity="${name}" data-description="${details.description}" data-schedule="${formattedSchedule}" title="Share on Twitter">
+        <button class="share-btn share-twitter" data-activity="${escapeHtmlAttribute(name)}" data-description="${escapeHtmlAttribute(details.description)}" data-schedule="${escapeHtmlAttribute(formattedSchedule)}" title="Share on Twitter">
           <span class="share-icon">𝕏</span>
         </button>
-        <button class="share-btn share-facebook" data-activity="${name}" data-description="${details.description}" data-schedule="${formattedSchedule}" title="Share on Facebook">
+        <button class="share-btn share-facebook" data-activity="${escapeHtmlAttribute(name)}" data-description="${escapeHtmlAttribute(details.description)}" data-schedule="${escapeHtmlAttribute(formattedSchedule)}" title="Share on Facebook">
           <span class="share-icon">f</span>
         </button>
-        <button class="share-btn share-email" data-activity="${name}" data-description="${details.description}" data-schedule="${formattedSchedule}" title="Share via Email">
+        <button class="share-btn share-email" data-activity="${escapeHtmlAttribute(name)}" data-description="${escapeHtmlAttribute(details.description)}" data-schedule="${escapeHtmlAttribute(formattedSchedule)}" title="Share via Email">
           <span class="share-icon">✉</span>
         </button>
-        <button class="share-btn share-link" data-activity="${name}" data-description="${details.description}" data-schedule="${formattedSchedule}" title="Copy Link">
+        <button class="share-btn share-link" data-activity="${escapeHtmlAttribute(name)}" data-description="${escapeHtmlAttribute(details.description)}" data-schedule="${escapeHtmlAttribute(formattedSchedule)}" title="Copy Link">
           <span class="share-icon">🔗</span>
         </button>
       </div>
@@ -844,7 +854,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const shareUrl = `${pageUrl}#${encodeURIComponent(activityName)}`;
     
     // Create share text
-    const shareText = `Check out "${activityName}" at Mergington High School! ${description} Schedule: ${schedule}`;
+    const shareText = `Check out "${activityName}" at ${SCHOOL_NAME}! ${description} Schedule: ${schedule}`;
     
     // Determine which share button was clicked
     if (button.classList.contains('share-twitter')) {
@@ -861,13 +871,43 @@ document.addEventListener("DOMContentLoaded", () => {
       const body = `${shareText}\n\nLearn more at: ${shareUrl}`;
       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     } else if (button.classList.contains('share-link')) {
-      // Copy link to clipboard
-      navigator.clipboard.writeText(shareUrl).then(() => {
+      // Copy link to clipboard with fallback for unsupported browsers
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showMessage('Link copied to clipboard!', 'success');
+        }).catch((err) => {
+          console.error('Failed to copy link:', err);
+          // Fallback method
+          copyToClipboardFallback(shareUrl);
+        });
+      } else {
+        // Fallback for browsers without clipboard API
+        copyToClipboardFallback(shareUrl);
+      }
+    }
+  }
+
+  // Fallback method to copy text to clipboard using textarea
+  function copyToClipboardFallback(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
         showMessage('Link copied to clipboard!', 'success');
-      }).catch((err) => {
-        console.error('Failed to copy link:', err);
+      } else {
         showMessage('Failed to copy link. Please try again.', 'error');
-      });
+      }
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      showMessage('Failed to copy link. Please try again.', 'error');
+    } finally {
+      document.body.removeChild(textarea);
     }
   }
 

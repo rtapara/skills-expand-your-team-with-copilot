@@ -367,8 +367,8 @@ button {
 }
 
 body.dark-mode .tooltip .tooltip-text {
-  background-color: rgba(230, 230, 230, 0.95);
-  color: #000;
+  background-color: rgba(70, 70, 70, 0.95);
+  color: #fff;
 }
 
 .tooltip:hover .tooltip-text {
